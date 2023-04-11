@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearSnapHelper
 import com.eazybytes.tappaevents.adapter.EventRecyclerAdapter
 import com.eazybytes.tappaevents.databinding.ActivityMainBinding
 import com.eazybytes.tappaevents.viewmodel.MainViewModel
@@ -49,13 +50,26 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
+        val recyclerView = binding.recyclerView
+
+        LinearSnapHelper().attachToRecyclerView(recyclerView)
+
+
+        binding.swipeRefresh.setOnRefreshListener {
+            viewModel.getEvents()
+        }
+
         viewModel.state.observe(this) {
             if (!it.isLoading) {
                 binding.progressBar.visibility = View.INVISIBLE
                 if (it.error.isNotBlank()) {
+                    binding.swipeRefresh.isRefreshing = false
+                    binding.recyclerView.visibility = View.INVISIBLE
                     binding.textError.visibility = View.VISIBLE
                     binding.textError.text = it.error
                 } else {
+                    binding.textError.visibility = View.GONE
+                    binding.swipeRefresh.isRefreshing = false
                     binding.recyclerView.visibility = View.VISIBLE
                     adapterr = EventRecyclerAdapter(it.eventItems)
                     binding.recyclerView.adapter = adapterr
